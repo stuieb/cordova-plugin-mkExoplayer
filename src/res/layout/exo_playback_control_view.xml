@@ -122,6 +122,16 @@
                     android:paddingLeft="8dp"
                     android:includeFontPadding="false"
                     android:textColor="@color/foreground_color"/>
+                <!-- EDIT -->
+                <TextView android:id="@id/exo_endtime"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:textSize="20dp"
+                          android:textStyle="bold"
+                          android:paddingLeft="8dp"
+                          android:includeFontPadding="false"
+                          android:textColor="@color/foreground_color"/>
+
             </LinearLayout>
 			<!-- 4. line -->
 			<TextView android:id="@id/exo_epg"

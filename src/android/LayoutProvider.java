@@ -126,6 +126,7 @@ public class LayoutProvider {
         View timebarView = findView(parentView, activity, "exo_timebar");
         TextView positionView = (TextView) findView(timebarView, activity, "exo_position");
         TextView durationView = (TextView) findView(timebarView, activity, "exo_duration");
+        TextView endTimeView = (TextView) findView(timebarView, activity, "exo_endtime");
         TextView saat = (TextView) findView(parentView , activity, "clock");
 
         if (null != textColor) {
@@ -135,18 +136,6 @@ public class LayoutProvider {
             }
             if (null != saat) {
                 saat.setTextColor(intTextColor);
-            }
-			if (null != epgView) {
-                epgView.setTextColor(intTextColor);
-            }
-            if (null != subtitleView) {
-                subtitleView.setTextColor(intTextColor);
-            }
-            if (null != positionView) {
-                positionView.setTextColor(intTextColor);
-            }
-            if (null != durationView) {
-                durationView.setTextColor(intTextColor);
                 Calendar cal = Calendar.getInstance();
                 int minutes = cal.get(Calendar.MINUTE);
 
@@ -161,6 +150,21 @@ public class LayoutProvider {
                     //saat.setText(hours + ":" + (minutes < 10 ? "0" + minutes : minutes) + " " + new DateFormatSymbols().getAmPmStrings()[cal.get(Calendar.AM_PM)]);
                     saat.setText(hours + ":" + (minutes < 10 ? "0" + minutes : minutes));
                 }
+            }
+			if (null != epgView) {
+                epgView.setTextColor(intTextColor);
+            }
+            if (null != subtitleView) {
+                subtitleView.setTextColor(intTextColor);
+            }
+            if (null != positionView) {
+                positionView.setTextColor(intTextColor);
+            }
+            if (null != durationView) {
+                durationView.setTextColor(intTextColor);
+            }
+            if(null != endTimeView) {
+                endTimeView.setTextColor(intTextColor);
             }
         }
         if(null != streamImage && streamImage !="") {
@@ -189,6 +193,14 @@ public class LayoutProvider {
             if (controller.optBoolean("hideDuration") && null != durationView) {
                 durationView.setVisibility(View.GONE);
                 ((ViewGroup) durationView.getParent()).removeView(durationView);
+            }
+            if (!controller.optBoolean("durationRealTime") && null != endTimeView) {
+               endTimeView.setVisibility(View.GONE);
+               ((ViewGroup) endTimeView.getParent()).removeView(endTimeView);
+            }
+            if (controller.optBoolean("hideClock") && null != saat) {
+                saat.setVisibility(View.GONE);
+                ((ViewGroup) saat.getParent()).removeView(saat);
             }
         }
     }

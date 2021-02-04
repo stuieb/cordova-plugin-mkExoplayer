@@ -297,8 +297,8 @@ public class mkPlayer{
                 showMenu();
                 return false;
             } else if (key.equals("KEYCODE_BACK") && event.getAction() == KeyEvent.ACTION_DOWN) {
-               stop();
-               close();
+                stop();
+                close();
                 return false;
             } else if (key.equals("KEYCODE_ESCAPE") && event.getAction() == KeyEvent.ACTION_DOWN) {
                 stop();
@@ -421,10 +421,14 @@ public class mkPlayer{
     private void preparePlayer(Uri uri) {
 
         int audioFocusResult = setupAudio();
+        JSONObject controller = config.getController();
+
         String audioFocusString = audioFocusResult == AudioManager.AUDIOFOCUS_REQUEST_FAILED ?
                 "AUDIOFOCUS_REQUEST_FAILED" :
                 "AUDIOFOCUS_REQUEST_GRANTED";
-        mclock() ;
+
+        if(!controller.optBoolean("hideClock")){  mclock() ; }
+
         TrackSelection.Factory trackSelectionFactory;
         trackSelectionFactory = new RandomTrackSelection.Factory();
         trackSelector = new DefaultTrackSelector(trackSelectionFactory);
@@ -449,11 +453,13 @@ public class mkPlayer{
             exoPlayer.setPlayWhenReady(autoPlay);
             paused = !autoPlay;
 
+            if(controller.optBoolean("durationRealTime"))
+            {
+                mHandler.post(updateUI);
+            }
+
             JSONObject payload = Payload.startEvent(exoPlayer, audioFocusString);
             new CallbackResponse(mkPlayer.this.callbackContext).send(PluginResult.Status.OK, payload, true);
-
-
-
         }
         else{
             showToast("Failed to construct mediaSource for " + uri) ;
@@ -556,6 +562,7 @@ public class mkPlayer{
         if (exoPlayer != null) {
             exoPlayer.release();
             exoPlayer = null;
+            mHandler.removeCallbacks(updateUI); //Remove Runnable
             dialog.dismiss();
         }
         if (this.dialog != null) {
@@ -601,7 +608,7 @@ public class mkPlayer{
             if (sira < 0) {
                 sira = say - 1;
             }
-            JSONObject controller= config.getController();
+            JSONObject controller = config.getController();
             try {
                 Uri link = Uri.parse(items_url.get(sira));
                 controller.put("streamImage", items_logo.get(sira));
@@ -636,6 +643,7 @@ public class mkPlayer{
 
     public void stop() {
         paused = false;
+        mHandler.removeCallbacks(updateUI); //Remove the runnable
         exoPlayer.stop();
     }
 
@@ -765,10 +773,7 @@ public class mkPlayer{
             }
             else{
                 builder.create().show();
-
             }
-
-
         }
 
     }
@@ -994,7 +999,7 @@ public class mkPlayer{
                 String trackName = new DefaultTrackNameProvider(activity.getResources()).getTrackName(mrendererTrackGroups.get(groupIndex).getFormat(trackIndex ));
                 String track = Format.toLogString(mtrackGroup.getFormat(trackIndex));
                 bitrate.add(mtrackGroup.getFormat(trackIndex).bitrate);
-               // Log.d(TAG,"Trackmk Name: "+trackName +  ", isSupported: "+ isTrackSupported +", Track: "+ track);
+                // Log.d(TAG,"Trackmk Name: "+trackName +  ", isSupported: "+ isTrackSupported +", Track: "+ track);
                 if(isTrackSupported) {
                     list.add(trackName);
                 }
@@ -1025,7 +1030,7 @@ public class mkPlayer{
                         parametersBuilder.clearSelectionOverrides(0);
                     }
                     trackSelector.setParameters(parametersBuilder);*/
-                  // showToast(bitrate.get(which).toString()) ;
+                    // showToast(bitrate.get(which).toString()) ;
                     Integer mBitrate=bitrate.get(which);
                     if(mBitrate > 0) {
                         DefaultTrackSelector.Parameters parameters = trackSelector.buildUponParameters()
@@ -1056,4 +1061,41 @@ public class mkPlayer{
         new com.mkalyon.cordova.plugins.mkEXO.CallbackResponse(mkPlayer.this.callbackContext).send(PluginResult.Status.ERROR, payload, true);
     }
 
+    //Show true end time of stream (in local time)
+    //--------------------------------------------------------------------------------------------------------------
+    private final Handler mHandler = new Handler();
+    private final Runnable updateUI= new Runnable()
+    {
+        @Override
+        public void run()
+        {
+            updateEndTime();
+        }
+    };
+
+    private void updateEndTime() {
+        TextView end = (TextView) findView(exoView , activity, "exo_endtime");
+        long played = (exoPlayer.getDuration()-exoPlayer.getCurrentPosition());
+        String endTime = "00:00";
+
+        played = (played < 0) ? 0 : played; // The time difference is a negative (Nothing of the stream has played) lets normalize to 0
+        Calendar stampy = Calendar.getInstance(); //Get the current time
+        stampy.setTimeInMillis(stampy.getTimeInMillis() + played); //Take the current time and add our played value
+
+        //Handles timezone data (Modified from the mclock() function)
+        int minutes = stampy.get(Calendar.MINUTE);
+        if (DateFormat.is24HourFormat(activity )) {
+            int hours = stampy.get(Calendar.HOUR_OF_DAY);
+            hours=hours + config.getTimeZone();
+            endTime = (hours < 10 ? "0" + hours : hours) + ":" + (minutes < 10 ? "0" + minutes : minutes);
+        }
+        else {
+            int hours = stampy.get(Calendar.HOUR);
+            hours=hours + config.getTimeZone();
+            endTime = hours + ":" + (minutes < 10 ? "0" + minutes : minutes);
+        }
+        end.setText(endTime); //Set the end time
+        mHandler.postDelayed(updateUI, 1000); //Lets get pooling
+    }
+    //--------------------------------------------------------------------------------------------------------------
 }

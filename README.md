@@ -27,6 +27,8 @@ New Features:
 - Clock
 - Toast message
 - Added getSubtitles / getAudios / getVideos / getPlaylist / showToast / showMenu 
+- Added show actual end time instead of stream duration
+- Added Hide Clock
 
 
 <img src="https://raw.githubusercontent.com/mkalyon/screenshoots/master/1a.png" >
@@ -130,6 +132,8 @@ If you use android 9.0.0 sdk add cordova-plugin-androidx plugin
 					hideProgress: false, // Hide entire progress timebar
 					hidePosition: false, // If timebar is visible hide current position from it
 					hideDuration: false // If timebar is visible Hide stream duration from it
+					durationRealTime: false, //Show the end time (Local time) instead of duration (Set hideDuration to true)
+					hideClock: false, //Hides the clock
 
 				},
 				items: [

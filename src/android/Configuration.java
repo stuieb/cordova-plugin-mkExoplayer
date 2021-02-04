@@ -141,4 +141,5 @@ public class Configuration {
     public boolean getShowSpinner() {
         return config.optBoolean("showSpinner");
     }
+
 }
